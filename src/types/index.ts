@@ -75,3 +75,28 @@ export interface PricingBreakdown {
   total: number;
 }
 
+export interface BookingFormData {
+  service: string;
+  customerName: string;
+  customerEmail?: string;
+  customerPhone: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zip: string;
+    gateCode?: string;
+  };
+  deliveryPreference: 'meet' | 'leave';
+  urgency: 'standard' | 'urgent' | 'asap';
+  innoutLocation?: string;
+  innoutOrder?: OrderItem[];
+  groceryOrder?: OrderItem[];
+  taskDetails?: string;
+  specialInstructions?: string;
+  pricing: PricingBreakdown;
+  agreedToTerms: boolean;
+  agreedToSms: boolean;
+  agreedToMarketing: boolean;
+}
+

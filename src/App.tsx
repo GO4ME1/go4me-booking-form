@@ -9,6 +9,7 @@ import TraderJoesShop from './components/TraderJoesShop';
 import LegalAgreements from './components/LegalAgreements';
 import PricingSummary from './components/PricingSummary';
 import { ShoppingBag, ArrowRight } from 'lucide-react';
+import { createCheckoutSession } from './services/api';
 
 function App() {
   const [formData, setFormData] = useState<OrderData>({
@@ -48,6 +49,8 @@ function App() {
     formData.groceryOrder
   );
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -80,9 +83,41 @@ function App() {
       return;
     }
 
-    // In a real implementation, this would redirect to Stripe Checkout
-    console.log('Order submitted:', { ...formData, specialInstructions, pricing });
-    alert(`Order total: $${pricing.total.toFixed(2)}\n\nIn production, this would redirect to Stripe Checkout.`);
+    // Create checkout session and redirect to Stripe
+    setIsSubmitting(true);
+    try {
+      const bookingData = {
+        service: formData.service,
+        customerName: formData.customerName,
+        customerEmail: '', // Optional field
+        customerPhone: formData.customerPhone,
+        address: {
+          street: formData.street,
+          city: formData.city,
+          state: formData.state,
+          zip: formData.zip,
+          gateCode: formData.gateCode,
+        },
+        deliveryPreference: formData.deliveryPreference,
+        urgency: formData.urgency,
+        innoutLocation: formData.innoutLocation,
+        innoutOrder: formData.innoutOrder,
+        groceryOrder: formData.groceryOrder,
+        taskDetails: formData.taskDetails,
+        specialInstructions,
+        pricing,
+        agreedToTerms: formData.agreedToTerms,
+        agreedToSms: formData.agreedToSms,
+        agreedToMarketing: formData.agreedToMarketing,
+      };
+
+      await createCheckoutSession(bookingData);
+      // Stripe will redirect to checkout page
+    } catch (error: any) {
+      console.error('Error creating checkout:', error);
+      alert(`Error: ${error.message || 'Failed to create checkout session. Please try again.'}`);
+      setIsSubmitting(false);
+    }
   };
 
   const selectedService = SERVICES.find(s => s.id === formData.service);
@@ -192,10 +227,11 @@ function App() {
             <div className="flex justify-center">
               <button
                 type="submit"
-                className="px-8 py-4 bg-primary text-white text-lg font-bold rounded-lg hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+                disabled={isSubmitting}
+                className="px-8 py-4 bg-primary text-white text-lg font-bold rounded-lg hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Continue to Payment
-                <ArrowRight size={20} />
+                {isSubmitting ? 'Processing...' : 'Continue to Payment'}
+                {!isSubmitting && <ArrowRight size={20} />}
               </button>
             </div>
           )}
